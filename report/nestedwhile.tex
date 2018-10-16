@@ -1,0 +1,108 @@
+\enlargethispage{100cm}
+% Start of code
+% \begin{tikzpicture}[anchor=mid,>=latex',line join=bevel,]
+\begin{tikzpicture}[line join=bevel,]
+  \pgfsetlinewidth{1bp}
+%%
+\begin{scope}
+  \pgfsetstrokecolor{black}
+  \definecolor{strokecol}{rgb}{1.0,1.0,1.0};
+  \pgfsetstrokecolor{strokecol}
+  \definecolor{fillcol}{rgb}{1.0,1.0,1.0};
+  \pgfsetfillcolor{fillcol}
+\end{scope}
+  \pgfsetcolor{black}
+  % Edge: 2 -> 3
+  \draw [->] (118.42bp,287.83bp) .. controls (112.72bp,279.62bp) and (105.87bp,269.76bp)  .. (93.822bp,252.41bp);
+  % Edge: 5 -> 4
+  \draw [->] (81.267bp,108.41bp) .. controls (82.104bp,116.06bp) and (82.443bp,125.11bp)  .. (81.735bp,143.83bp);
+  % Edge: 6 -> 7
+  \draw [->] (167.29bp,71.831bp) .. controls (153.98bp,62.793bp) and (137.72bp,51.748bp)  .. (114.78bp,36.163bp);
+  % Edge: 4 -> 6
+  \draw [->] (105.81bp,143.83bp) .. controls (120.9bp,134.62bp) and (139.41bp,123.33bp)  .. (164.27bp,108.16bp);
+  % Edge: 4 -> 5
+  \draw [->] (69.831bp,143.83bp) .. controls (68.973bp,136.13bp) and (68.625bp,126.97bp)  .. (69.315bp,108.41bp);
+  % Edge: 0 -> exit
+  \draw [->] (244.45bp,431.56bp) .. controls (258.57bp,404.78bp) and (282.04bp,353.17bp)  .. (282.04bp,306.0bp) .. controls (282.04bp,306.0bp) and (282.04bp,306.0bp)  .. (282.04bp,234.0bp) .. controls (282.04bp,193.88bp) and (281.64bp,147.46bp)  .. (281.24bp,108.19bp);
+  % Edge: 8 -> 9
+  \draw [->] (197.81bp,215.83bp) .. controls (198.99bp,208.13bp) and (200.39bp,198.97bp)  .. (203.22bp,180.41bp);
+  % Edge: 7 -> 2
+  \draw [->] (42.204bp,36.211bp) .. controls (26.991bp,44.696bp) and (11.731bp,56.431bp)  .. (3.0354bp,72.0bp) .. controls (-0.75784bp,78.792bp) and (-0.63875bp,159.39bp)  .. (2.0354bp,180.0bp) .. controls (6.293bp,212.82bp) and (0.06531bp,226.4bp)  .. (21.035bp,252.0bp) .. controls (32.022bp,265.41bp) and (47.163bp,275.76bp)  .. (71.864bp,287.99bp);
+  % Edge: 2 -> 8
+  \draw [->] (147.19bp,287.83bp) .. controls (154.71bp,279.37bp) and (163.79bp,269.15bp)  .. (178.67bp,252.41bp);
+  % Edge: 1 -> 2
+  \draw [->] (178.89bp,359.83bp) .. controls (171.36bp,351.37bp) and (162.28bp,341.15bp)  .. (147.4bp,324.41bp);
+  % Edge: 0 -> 1
+  \draw [->] (224.19bp,431.83bp) .. controls (219.84bp,423.79bp) and (214.63bp,414.17bp)  .. (205.01bp,396.41bp);
+  % Edge: 3 -> 4
+  \draw [->] (79.774bp,215.83bp) .. controls (79.239bp,208.13bp) and (78.603bp,198.97bp)  .. (77.314bp,180.41bp);
+  % Edge: 9 -> exit
+  \draw [->] (224.96bp,143.83bp) .. controls (234.02bp,135.13bp) and (245.02bp,124.58bp)  .. (262.12bp,108.16bp);
+  % Node: exit
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (281.04bp,90.0bp) node {10: Exit};
+\end{scope}
+  % Node: 1
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (195.04bp,378.0bp) node {1: DEF (x := 0)};
+\end{scope}
+  % Node: 0
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (234.04bp,450.0bp) node {0: Start};
+\end{scope}
+  % Node: 3
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (81.035bp,234.0bp) node {3: DEF (y := 0)};
+\end{scope}
+  % Node: 2
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (131.04bp,306.0bp) node {2: BRANCH (x < 10)};
+\end{scope}
+  % Node: 5
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (75.035bp,90.0bp) node {5: DEF (y := y + 1)};
+\end{scope}
+  % Node: 4
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (76.035bp,162.0bp) node {4: BRANCH (y < x)};
+\end{scope}
+  % Node: 7
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (88.035bp,18.0bp) node {7: DEF (x := x + 1)};
+\end{scope}
+  % Node: 6
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (194.04bp,90.0bp) node {6: EMPTY};
+\end{scope}
+  % Node: 9
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (206.04bp,162.0bp) node {9: RETURN 0};
+\end{scope}
+  % Node: 8
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (195.04bp,234.0bp) node {8: EMPTY};
+\end{scope}
+%
+\end{tikzpicture}

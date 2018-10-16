@@ -1,0 +1,46 @@
+\enlargethispage{100cm}
+% Start of code
+% \begin{tikzpicture}[anchor=mid,>=latex',line join=bevel,]
+\begin{tikzpicture}[line join=bevel,]
+  \pgfsetlinewidth{1bp}
+%%
+\begin{scope}
+  \pgfsetstrokecolor{black}
+  \definecolor{strokecol}{rgb}{1.0,1.0,1.0};
+  \pgfsetstrokecolor{strokecol}
+  \definecolor{fillcol}{rgb}{1.0,1.0,1.0};
+  \pgfsetfillcolor{fillcol}
+  \filldraw (0.0bp,0.0bp) -- (0.0bp,108.0bp) -- (202.0bp,108.0bp) -- (202.0bp,0.0bp) -- cycle;
+\end{scope}
+  \pgfsetcolor{black}
+  % Edge: 2 -> 1
+  \draw [->] (74.476bp,36.413bp) .. controls (75.207bp,44.059bp) and (75.42bp,53.108bp)  .. (74.452bp,71.831bp);
+  % Edge: 1 -> 2
+  \draw [->] (62.548bp,71.831bp) .. controls (61.797bp,64.131bp) and (61.576bp,54.974bp)  .. (62.524bp,36.413bp);
+  % Edge: 1 -> 3
+  \draw [->] (92.473bp,71.831bp) .. controls (104.29bp,62.878bp) and (118.7bp,51.956bp)  .. (139.54bp,36.163bp);
+  % Node: 1
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (137.0bp,108.0bp) -- (0.0bp,108.0bp) -- (0.0bp,72.0bp) -- (137.0bp,72.0bp) -- cycle;
+  \draw (68.5bp,90.0bp) node {1: BRANCH COND};
+\end{scope}
+  % Node: 3
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (202.0bp,36.0bp) -- (125.0bp,36.0bp) -- (125.0bp,0.0bp) -- (202.0bp,0.0bp) -- cycle;
+  \draw (163.5bp,18.0bp) node {3: EMPTY};
+\end{scope}
+  % Node: 2
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (107.0bp,36.0bp) -- (30.0bp,36.0bp) -- (30.0bp,0.0bp) -- (107.0bp,0.0bp) -- cycle;
+  \draw (68.5bp,18.0bp) node {2: EMPTY};
+\end{scope}
+%
+\end{tikzpicture}
+
+

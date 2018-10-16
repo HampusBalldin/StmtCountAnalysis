@@ -1,0 +1,6 @@
+.stack-work/
+WCET.cabal
+*~
+TAGS
+test/
+output/

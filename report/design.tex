@@ -1,0 +1,459 @@
+% !TEX encoding = UTF-8 Unicode
+\documentclass[a4paper]{article}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{textcomp}
+\usepackage{paralist}
+\usepackage{wrapfig}%https://preview.overleaf.com/public/nhgtcfbqhdqd/images/c3261aacf075202acb6214f8591bc9962a3b8c8b.jpeg
+\usepackage{url}
+\usepackage{mathtools}
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+
+\usepackage{paralist}
+\usepackage{amsfonts}
+\usepackage[margin=1in]{geometry}
+\usepackage{blindtext}
+\usepackage{scrextend}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\usepackage{dirtree}
+\usepackage{courier}
+\usepackage[T1]{fontenc}     % För svenska bokstäver
+\usepackage[utf8]{inputenc}  % Teckenkodning UTF8
+\usepackage[english, swedish]{babel}  % För svensk avstavning och svenskahttps://preview.overleaf.com/public/nhgtcfbqhdqd/images/c3261aacf075202acb6214f8591bc9962a3b8c8b.jpeghttps://preview.overleaf.com/public/nhgtcfbqhdqd/images/c3261aacf075202acb6214f8591bc9962a3b8c8b.jpeg
+\usepackage{listings}
+\usepackage{color}
+\usepackage{minted}
+\usepackage{amsthm}
+\usepackage[english]{algorithm2e}
+\usepackage{tikz}
+\usepackage[pdf]{graphviz}
+
+
+
+ 
+\newcommand{\DomRel}[2]{#1\;\underline{\texttt{>>}}\;#2}
+\newcommand{\DomRelStrict}[2]{#1\;\texttt{>>}\;#2}
+                             % rubriker (t ex "Innehållsförteckning")
+\usepackage{fancyvrb}        % För programlistor med tabulatorer
+\fvset{tabsize=4}            % Tabulatorpositioner
+\fvset{fontsize=\small}      % Lagom storlek för programlistor
+
+\usepackage{framed}
+
+\title{Design of Flow Analysis}
+\author{Hampus Balldin, Emil Hammarström
+}
+
+\newcommand {\cat }{%
+\mathbf%
+}
+\newcommand {\domain } [ 1 ] {%
+\mathrm{dom}(#1)%
+}
+\newcommand {\codomain } [ 1 ] {%
+\mathrm{cod}(#1)%
+}
+\newcommand {\idarrow} [ 1 ] [ ] {%
+\mathbf{1} {#1}%
+}
+% Paket:
+\usepackage{graphicx}         % För att inkludera bilder.
+
+% Kommandon i denna rapport
+\newcommand{\code}[1]{\texttt{#1}} % För programkod i text.
+% *** Slut på tillägg för denna rapport. ***
+
+\newcommand{\NL}[0]{ \hfill\\\noindent }
+\newenvironment{nscenter}
+ {\parskip=0pt\par\nopagebreak\centering}
+ {\par\noindent\ignorespacesafterend}
+ 
+\begin{document}              % Början på dokumentet
+\selectlanguage{english}
+\thispagestyle{empty}
+
+
+\maketitle                    % Skriver ut rubriken som vi
+                              % definierade ovan med \title, \author
+                              % och eventuellt \date
+\pagenumbering{gobble}
+\newpage
+\tableofcontents
+\pagenumbering{arabic}
+\newpage
+\section{Introduction}
+\subsubsection{Assumptions}
+We assume the absence of type errors. For example, one may not evaluate $x + 1$ where $x$ is a Bool.\NL\NL
+We assume that the variables are renamed and that PHI-functions are inserted to put the CFG on SSA form.
+
+\subsubsection{CFG IR (Task 1)}
+Our CFG IR consists of nodes and edges. An edge between two nodes $n_1$, $n_2$ means that the program execution may continue to $n_2$ after $n_1$. A node is one of the following types:
+
+\begin{minted}{haskell}
+data Node = DEF Identifier Expr
+		  | BRANCH Expr
+	      | RETURN Expr
+          | EMPTY
+\end{minted}
+\noindent
+The node relation is kept in a separate data structure that can be queried for successors $S\;n = \{ \text{Successor of } n \}$. Every node (apart from the exit node (Exit)) has at least one successor. 
+
+\paragraph{DEF Node}\NL
+A <DEF $i$ $e$> node defines a variable $i$ to take the value of expression $e$. 
+
+\paragraph{BRANCH Node}\NL
+\textit{A branch node has two successors. One of them is the ``True''-successor.} \NL
+In a <BRANCH $e$> node, the flow continues to the ``True''-successor if $e$ evaluates to True (else the flow continues along the other edge).
+
+\paragraph{RETURN Node}\NL
+A <RETURN $e$> node acts like a ``goto Exit'' node. Before going to Exit, the expression $e$ is evaluated. The flow gets absorbed at Exit since Exit has no successors.
+
+\paragraph{EMPTY Node}\NL
+An <EMPTY> node acts like a ``no-operation''. We keep it for ease of constructing the CFG.
+
+\NL The three important control-flow structures are IF, WHILE, TWICE. 
+
+\paragraph{IF Construct}\NL
+The IF construct uses the BRANCH primitive. A value (\textbf{If} $e\;th\;el$) :: If Expr Stmt Stmt gets transformed into the CFG IR by adding a <BRANCH $e$> node and adding the transformation of $th$ and $el$ as successors in the CFG. 
+For ease of construction, we add an <EMPTY> node to the successor sets of $th$ and $el$.
+
+\NL The result of transformation of the statement: \textbf{If COND Skip Skip} is shown in figure \ref{ifflow}.
+\begin{figure}[ht!]
+\centering	
+\scalebox{.7}{\input{iftex}}
+\caption{ CFG IR of \textbf{If COND Skip Skip} visualized. }
+\label{ifflow}
+\end{figure}
+
+\paragraph{WHILE Construct}\NL
+The WHILE construct also uses the BRANCH primitive. An empty node is inserted at the false branch to allow nested loops. The last statement in the while body has the <BRANCH e> as its' successor. 
+
+\NL
+The branch construct for \textbf{While COND Skip} is shown in figure \ref{whileflow}.
+
+\begin{figure}[ht!]
+	\centering	
+	\scalebox{.7}{\input{whiletex}}
+	\caption{ CFG IR of \textbf{If COND Skip Skip} visualized. }
+	\label{whileflow}
+\end{figure}
+
+\paragraph{TWICE Construct}\NL
+The twice construct duplicates a statement in the CFG graph by combining the corresponding transform blocks in sequential order. This has the downside of leading to additional memory usage. On the other hand, the flow analysis is simplified by not introducing additional block types.
+
+\begin{figure}[ht!]
+	\centering	
+	\scalebox{.6}{\input{twicetex}}
+	\caption{ CFG IR of \textbf{TWICE (While COND Skip)} visualized. }
+	\label{twiceflow}
+\end{figure}
+
+%\paragraph{Example Program}\NL
+%An example program using the constructs is shown in figure \ref{programexample}. The code used to generate the CFG is included in the appendix.
+%
+%\begin{figure}[ht!]
+%	\centering	
+%	\scalebox{.6}{\input{programexample}}
+%	\caption{ CFG IR of program example visualized. }
+%	\label{programexample}
+%\end{figure}
+
+\subsubsection{Skipping WHILE (Task 2)}
+In a language with only if branches (no loops or gotos), the CFG structure turns into a tree (in our construct will have artificial convergence after an if node, so it is a pseudo-tree). Such a pseudo-tree can be evaluated from the start node following the CFG edges in a linear progression. We keep track of the value of each variable; the tree structure ensures no divergence. At each branch, the conditional expression is evaluated (using e.g. a lookup table for variable values) and the taken branch is followed. Any given pseudo-tree program can in this case be reduced to a linear sequence of operations. The analysis will thus always follow a deterministic path from start node to exit node (no merging); time complexity is linear in the number of CFG nodes. Further, the space complexity is also linear in the number of variables + CFG nodes.
+
+\subsubsection{Abstract Domains}
+
+\paragraph{Abstract Domain for Values}\NL
+A value is either in $\mathbb{N}$ or $\mathbb{B} = \{\text{True}, \text{False}\}$. Let $S$ = $\mathbb{N} \cup \mathbb{B}$. Let the lattice set for values be the powerset of $S$; $\mathcal{L} = \mathcal{P}(S)$. The lattice element of a variable $v$ at statement $u$ indicates the set of reaching definitions for $v$ at $u$. 
+
+\NL
+To ensure convergence (through DCC), need to make the lattice finite. To this end, we set an upper bound $n$ for the number of definitions in a lattice element. The height of the variable lattice is thus $n + 2$ (including top and bottom) with $\top = \emptyset$, $\bot = \mathcal{L}$.
+
+
+
+\paragraph{Merging}\NL
+We merge elements by taking their union: $\sqcap = \cup$. 
+
+\subsubsection{Transfer Functions}
+\paragraph{Transfer <DEF>}\NL
+The transfer function at a <DEF: $x \leftarrow e$> is a KILL/GEN transfer. Assume a def. $x \leftarrow y$. Then the new lattice element of $x$ is equal to the lattice element of $y$.
+
+\NL
+We compute right hand sides for a binary expression $f\;x\;y$ as follows. Let the corresponding lattice elements be denoted $D_x, D_y$. Then the newly generated lattice element is:
+$\{ f\;x\;y \;|\; (x,y) \leftarrow D_x \times D_y \}$. For example, assume a node $b = $ <DEF: $x \leftarrow x + y$> where $D_x = \{1,2\}$, $D_y = \{3,4\}$. Then the result of the transfer function for variable $x$ at node $b$ is $\{1 + 3, 1 + 4, 2 + 3, 2 + 4\} = \{4,5,6\}$.
+
+\paragraph{Transfer <EMPTY> or <RETURN>}\NL
+The transfer at an <EMPTY> node as well as at a <RETURN> node is the identity function for all variables.
+
+\paragraph{Transfer <BRANCH>}\NL
+The transfer at a branch is path-sensitive. Assume a branch condition $P\;x\;y$ with input variable domains $D_x$, $D_y$ (have $D_c = \{c\}$ for all constants $c$).  The transfer along the true branch for $x$, $y$ is the subset of $D_x$, $D_y$ where predicate $P\;x\;y$ holds (the remaining values gets transferred along the false branch).
+
+\NL
+We note that this leads to imprecision when both $x$ and $y$ are variables. 
+
+\NL
+For example, assume <BRANCH: $x < y$> with $D_x = {1,2,3}$, $D_y = {2,3}$. The value for which the predicate holds is $\{(1,2), (1,3), (2,3)\}$ and the remaining values (false) are $\{(2,2), (3,2), (3,3)\}$. Thus we propagate:
+\begin{align*}
+D_x^{x < y} &= \{1, 2\} , \quad D_y^{x < y}  = \{2,3\} \\
+D_x^{x >= y} &= \{2,3\} , \quad D_y^{x >= y} = \{2,3\} 
+\end{align*}
+\noindent
+A more complex analysis could first check which variables are transitively related at branches. The set of variable domains is then partitioned into sets of transitive branch relatedness. Continuing with the example, we would instead have $D_{x,y}$ = $D_x \times D_y$ and the branch condition then trivially partitions $D_{x,y}$. 
+
+\paragraph{Example}\NL
+Consider the CFG in figure x.
+
+\paragraph{SSA Form}\NL
+
+% The merge on SSA form occures at a PHI function.
+
+% \begin{verbatim}
+% merge x :: Nat, y :: Nat
+%     | x == y = x
+%     | x /= y = Infinity
+% merge x :: Nat, y :: Bool  = Any
+% merge x :: Bool, y :: Nat  = Any
+% merge x :: Bool, y :: Bool
+%     | x == y = x
+%     | x /= y = Either
+% \end{verbatim}
+
+% A value is either in Nat or Bool.
+%
+% At an assignment stmt, the transfer function for the defined variable acts according to the Expr Operation. Else the transfer function is id.
+%
+% The language is not typed and thus a variable can switch between Nat and Bool. We thus extend Nat with two designated elements ``True'' and ``False'': NatBool = N | Bool.
+%
+% (We assume that subtraction does not go outside of Nat, in particular x - y s.t y > x results in 0).
+%
+% The Top element is Unknown. The bottom element is infinity.
+%
+% At a re-assign, can move from Bottom to any other element.
+
+% With SSA form, each variable has a unique type (since cannot define a variable twice). Thus can split the lattices into two; one Nat lattice and one Bool lattice. In addtion, SSA form ensures that we only go down in the lattice. Using NatBool could go from infinity to some finite value at a re-definition.
+
+% \begin{verbatim}
+%     Top = Unknown ------------------|
+%         0 1 2 ...                 False -- True
+%           |                         |      |
+%         Infinity                     Either            (BOTTOMS)
+%                       Any
+% \end{verbatim}
+
+% \paragraph{Abstract Domain for Stmts}\NL
+% For the statement execution count we use the natural numbers $\mathbb{N}$ with $\top = 0$ and $\bot = \infty$. The lattice counts the number of times that a stmt has been executed. Thus the transfer function is either id (not executed at current point) or (+1) (executed). To be precise we merge with maximum.
+%
+%\begin{verbatim}
+%0       = Top
+%|
+%1
+%|
+%2
+%.
+%.
+%.
+%Infinity = Bottom
+%\end{verbatim}
+% \subsubsection{Flow Analysis}
+%We use a flow -and path sensitive data analysis. Introduce it with an example:
+%
+%\begin{verbatim}
+%                        BRANCH
+%            x < 5                      x >= 5
+%\end{verbatim}
+%
+%Assume that we have current reaching values $\{0,1,2,3,4,5\}$ for $x$. So far in the analysis have only taken the left branch. Now, we have the value 5 that would lead to $x$ taking the right branch. Thus we split the domain for $x$ into $\{0,1,2,3,4\}_{x < 5}$ and $\{5\}_{x \geq 5}$ and propagate the sets along the corresponding edges. In the for-like while-loop, the size of the domain of the condition variable will converge to the number of times the loop branch was taken.
+%
+%
+%The analysis is path sensitive since split domain of a variable over a path.
+%The analysis is flow sensitive since we care about the domain of each variable at each node.
+%
+%Let Property $P_s\;n = $ ``$s$ has been executed $n$ times''.
+
+%\paragraph{Properties} \NL
+%Flow sensitive (to determine branches correctly from variable values). 
+%Forward (start to exit).
+%Does not use path sensitivity (not needed since have absolute information at each branch).
+%Due to linearity, we never have to merge and thus distributivity is not of interest.
+%The statement transfer is either id or (+1). Thus the transfer function is monotonic (always move down (+1) or stay the same (id)).
+
+\subsubsection{Introducing For-like WHILE (Task 3)}
+A for-like while-loop is shown in figure \ref{forwhile}. At the fix-point for reaching path-sensitive reaching defs., we will get
+\begin{align*}
+D_{x,2}^{x < 10} = \{0,1,\ldots 9 \}, D_{x,2}^{x >= 10} = \{ 10 \}
+\end{align*}
+\noindent
+Thus all statements below the true branch (of node number 2) is executed 10 = $|D_{x,2}^{x < 10}|$ times and the remaining statements are executed once.
+\begin{figure}[ht!]
+	\centering	
+	\scalebox{.6}{\input{forwhile}}
+	\caption{ A for-like while loop. }
+	\label{forwhile}
+\end{figure}
+\noindent
+%For non-nested WHILE-constructions with simple conditions one may thus find the number of times that a statement has been executed by checking the size of the domain of the controlling variable at the controlling branch statement. 
+
+\NL
+For non-nested WHILE-constructions with simple conditions one may thus find the number of times that a statement has been executed by computing the size of the domains of all variables that may affect whether the statement is executed or not. 
+
+\NL
+To formalize the above, let $CD^{-1}\;v = \{ u\;|\;u\;\delta^c\;v  \}$ where $u\;\delta^c\;v$ iff $u$ is a <BRANCH> node s.t. if one successor branch is taken then $v$ is definitely not executed, otherwise (if the other successor branch is taken) all paths lead to $v$ being executed (and so $v$ is definitely executed). $CD^{-1}\;v$ can be computed as the dominance frontier of the reverse CFG (any further description is outside the scope of this text).
+
+\NL
+The set of constraints that determine if a node $v$ is executed is thus the set of branch conditions for all branches in $CD^{-1}\;v$:
+\begin{align*}
+E\;v = \{ Cond\;u\;|\;u \in CD^{-1}\;v \}
+\end{align*}
+\noindent
+We further let the set of condition variables in $E\;v$ be denoted $E_{Var}\;v$. Each condition variable $x$ in $E_{Var}\;v$ has the fix-point lattice element $D_{x,v}$ at v which indicates what values the variable $x$ may take at $v$. We form the cartesian product of all the abstract domains of the condition variables to get the constraint universe at $v$:
+\begin{align*}
+U\;v = \bigtimes_{ x \in E_{Var}\;} D_{x,v}
+\end{align*}
+\noindent
+Finally, the number of times that statement $v$ has been executed is the number of elements in $U\;v$ that satisfy all the constraints in $E\;v$:
+\begin{align*}
+&S\;v = \{ w \in U\;v\;|\; \forall \text{Constraint} \; c \in E\;v. \;\; c\;w\}\\
+&\text{STMT\_COUNT}_v = |S\;v|
+\end{align*}
+
+\paragraph{Example}\NL
+Consider the CFG in figure \ref{forwhileif}. Since the value $y$ is not updated after initialization at node $1$, it has the constant domain $\{0\}$ at all nodes (up to path sensitivity). Some interesting fix-points for $x$ is given below:
+\begin{align*}
+D_{x,6}  &= \{0,1,2,3,4\},    &D_{x,7}  &= \{5,6,7,9\}\\
+D_{x,10} &= \{0, \ldots, 9\}, &D_{x,11} &= \{0, \ldots, 9\} \\
+D_{y,10} &= D_{y,6} = D_{y,7} = \{1\}\\
+D_{y,11} &= \emptyset 
+\end{align*}
+\noindent
+The controlling branches are (ignoring the start node):
+\begin{align*}
+CD^{-1}\;6  &= CD^{-1}\;7  = \{3,5\} \\
+CD^{-1}\;10 &= CD^{-1}\;11 = \{3, 9\}
+\end{align*}
+\noindent
+The set of constraints and constraint variables are given by:
+\begin{align*}
+E\;6  &= \{x < 10, x < 5\}\\
+E\;7  &= \{x < 10, x \geq 5\}\\
+E\;10 &= \{x < 10, y == 0\}\\
+E\;11 &= \{x < 10, y \neq 0\}\\
+E_{Var}\;6  &= E_{Var}\;7  = \{x\}\\
+E_{Var}\;10 &= E_{Var}\;11 = \{x, y\}
+\end{align*}
+\noindent
+The constraint universes are then given by:
+\begin{align*}
+U\;6  &= D_{x,6} = \{0,1,2,3,4\}\\
+U\;7  &= D_{x,7} = \{5,6,7,9\}\\
+U\;10  &= D_{x,10} \times D_{y,10} = \{(0,1),(1,1), \ldots (9,1)\}\\
+U\;7  &= D_{x,7} \times \emptyset = \emptyset\\
+\end{align*}
+\noindent
+Matching against the constraints we find:
+\begin{align*}
+\text{STMT\_COUNT}_6    &= 5\\
+\text{STMT\_COUNT}_7    &= 4\\
+\text{STMT\_COUNT}_{10} &= 10\\
+\text{STMT\_COUNT}_{11} &= 0
+\end{align*}
+
+
+
+% Let $b_v$ be the smallest element of $CD^{-1}\;v$ with respect to dominance ($x \leq y$ iff $\DomRel{y}{x}$). 
+
+%The number of times that a statement $v$ has been executed is then the cardinality of $D_{Var(b_v)}^{\text{Branch Taken}}$ where $Var(b_v)$ selects the condition variable. 
+
+%\NL
+%Consider the example in figure \ref{forwhileif}. We have $Var(4) = Var(2) = x$. Further have, $CD^{-1}\; 5 = CD^{-1}\; 6 = \{2, 4\}$ and $CD^{-1}\;7 = CD^{-1}\;3 = \{2\}$. At the fix-point of the flow analysis we get:
+%\begin{align*}
+%D_{x,2}^{x < 10} = \{0, \ldots, 9\},\quad D_{x,2}^{x \geq 10} = \{10\} \\
+%D_{x,4}^{x < 3} = \{0, 1, 2\},\quad D_{x,4}^{x \geq 5} = \{3,4 \ldots 9\}
+%\end{align*}
+
+%\NL 
+%From the above reasoning it follows that nodes $3, 7$ which are control dependent on node $2$ are executed $|D_{x,2}^{x < 10}| = 10$ times. Since node $2$ dominates node $4$ we get $b_5 = b_6 = 4$. By taking the absolute value of $D_{Var(4) = x}^{\text{Branch Taken}}$ for each node we get the number of times node $5$ is $3$ times and node $6$ is executed $7$ times.
+
+\begin{figure}[ht!]
+	\centering	
+	\scalebox{.5}{\input{forwhileif}}
+	\caption{ A for-like while loop with an additional if construct. }
+	\label{forwhileif}
+\end{figure}
+\subsubsection{Properties Analysis}
+The analysis we have described is a forward analysis to compute reaching definitions for the variables. 
+
+\NL
+It is flow-sensitive since we need the set of reaching definitions for a variable at each CFG node (and it typically differs between nodes).
+
+\NL
+It is path sensitive since we remove the values from a variables abstract domain that a branch condition asserts cannot hold.
+
+\subsubsection{Properties Framework}
+\paragraph{Distributivity BRANCH Transfer}\NL
+The transfer function at a branch is path sensitive and so it takes the intersection with some set $B$ (e.g. if transfer $D_x$ over $x > 10$) then $B_1 = \{0,\ldots,10\}, B_2 = \{11, 12, \ldots\}$. Then distributivity follows from set laws: 
+
+\NL
+$trans_b(D_x \cup D_y) = (D_x \cup D_y) \cap B = (D_x \cap B) \cup (D_y \cap B) = trans_b(D_x) \cup trans_b(D_y)$.
+
+\paragraph{Montonicity DEF Transfer}\NL
+Consider the def. $x \leftarrow y \oplus z$. We compute the new domain for $x$, $D_x$, as $D_x = \{ y \oplus z \;|\; (y,z) \leftarrow D_y \times D_z\}$. Since use union as the merge operator, we have $A \sqsubseteq B \iff B \subseteq A$. Either we merge before transfer or we transfer and then merge. The two cases then become:
+\begin{align*}
+&\text{Merge Before: } D_x^{Before} = \{a \oplus b \; | \; (a, b) \leftarrow (D_y \cup D_y') \times (D_z \cup D_z') \} \\
+&\text{Merge After: } D_x^{After} = \{a \oplus b \; | \; (a, b) \leftarrow D_y \times D_z \} \cup \{a \oplus b \; | \; (a, b) \leftarrow D_y' \times D_z' \}
+\end{align*}
+\NL
+The DEF Transfer is NOT distributive. A counter example is $D_z = D_y' = \emptyset, D_y\neq \emptyset, D_z \neq \emptyset$. Then $D_x^{After}$ is empty but $D_x^{Before}$ is non-empty. 
+
+\NL
+Now show that transfer is monotonic, i.e. $D_x^{After} \subseteq D_x^{Before}$. This follows directly from the properties of the cartesian product and union: $(a,b) \in A \times B \implies (a,b) \in A' \times B' \;\forall A \subseteq A', B \subseteq B'$.
+
+\paragraph{Distributivity RETURN/EMPTY Transfer}\NL
+Both RETURN and EMPTY have the identity function as transfer and so they are trivially distributive.
+
+\paragraph{Conclusion: Montonicity}\NL
+Distributivity implies monotonicity and so since all transfer functions monotonic but not all distributive we have a monotonic framework. 
+
+\subsubsection{Limitations of Analysis}
+If SSA form is not used, the following example would give the wrong result:
+
+\begin{verbatim}
+{ x = 0
+  while x < 5 do
+  	{
+  		y = x
+  		x = 0
+  		...
+  		x = y + 1
+  	}
+  done 
+}
+\end{verbatim}
+\noindent The domain for $x$ after the assignment to $0$ gets separated from that of the branch condition. To ensure that this does not happen, one needs to either perform some additional analysis on non-SSA form, or use SSA form.
+
+\paragraph{Too large domains}\NL
+The analysis looses precision if the loop is sufficiently long since we need to upper bound the cardinality of a lattice element.
+
+%\paragraph{Nested loops with non-trivial branch condition}\NL
+%Consider the CFG in figure \ref{nestedwhile}. The domains at node $5$ will 
+%
+%\begin{figure}[ht!]
+%	\centering	
+%	\scalebox{.5}{\input{nestedwhile}}
+%	\caption{ A nested-while loop with non-trivial branch cond. }
+%	\label{nestedwhile}
+%\end{figure}
+
+\newpage
+\section{Appendix}
+\paragraph{Stmt.hs}
+\inputminted{haskell}{../src/Stmt.hs}
+\newpage
+\paragraph{CFG.hs}
+\inputminted{haskell}{../src/CFG.hs}
+
+\newpage
+\bibliography{bibtex}{}
+\bibliographystyle{plain}
+\end{document}
+% Slut på dokumentet
