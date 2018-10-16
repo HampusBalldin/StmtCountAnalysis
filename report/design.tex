@@ -85,7 +85,7 @@
 \section{Introduction}
 \subsubsection{Assumptions}
 We assume the absence of type errors. For example, one may not evaluate $x + 1$ where $x$ is a Bool.\NL\NL
-We assume that the variables are renamed and that PHI-functions are inserted to put the CFG on SSA form.
+%We assume that the variables are renamed and that PHI-functions are inserted to put the CFG on SSA form.
 
 \subsubsection{CFG IR (Task 1)}
 Our CFG IR consists of nodes and edges. An edge between two nodes $n_1$, $n_2$ means that the program execution may continue to $n_2$ after $n_1$. A node is one of the following types:
@@ -204,7 +204,7 @@ A more complex analysis could first check which variables are transitively relat
 \paragraph{Example}\NL
 Consider the CFG in figure x.
 
-\paragraph{SSA Form}\NL
+%\paragraph{SSA Form}\NL
 
 % The merge on SSA form occures at a PHI function.
 
@@ -345,7 +345,7 @@ E_{Var}\;10 &= E_{Var}\;11 = \{x, y\}
 The constraint universes are then given by:
 \begin{align*}
 U\;6  &= D_{x,6} = \{0,1,2,3,4\}\\
-U\;7  &= D_{x,7} = \{5,6,7,9\}\\
+U\;7  &= D_{x,7} = \{5,6,7,8,9\}\\
 U\;10  &= D_{x,10} \times D_{y,10} = \{(0,1),(1,1), \ldots (9,1)\}\\
 U\;7  &= D_{x,7} \times \emptyset = \emptyset\\
 \end{align*}
@@ -353,7 +353,7 @@ U\;7  &= D_{x,7} \times \emptyset = \emptyset\\
 Matching against the constraints we find:
 \begin{align*}
 \text{STMT\_COUNT}_6    &= 5\\
-\text{STMT\_COUNT}_7    &= 4\\
+\text{STMT\_COUNT}_7    &= 5\\
 \text{STMT\_COUNT}_{10} &= 10\\
 \text{STMT\_COUNT}_{11} &= 0
 \end{align*}
@@ -414,6 +414,9 @@ Both RETURN and EMPTY have the identity function as transfer and so they are tri
 \paragraph{Conclusion: Montonicity}\NL
 Distributivity implies monotonicity and so since all transfer functions monotonic but not all distributive we have a monotonic framework. 
 
+\subsubsection{Nested While-Loops}
+
+
 \subsubsection{Limitations of Analysis}
 If SSA form is not used, the following example would give the wrong result:
 
@@ -433,6 +436,28 @@ If SSA form is not used, the following example would give the wrong result:
 
 \paragraph{Too large domains}\NL
 The analysis looses precision if the loop is sufficiently long since we need to upper bound the cardinality of a lattice element.
+
+\paragraph{Too many branches}\NL
+If have more than one choice per variable then the number of possibilities grows exponentially fast when performing constraint solving. This is of course infeasible for large programs. One may sacrifice some precision and not do exact constraint satisfaction: 
+
+\begin{verbatim}
+{ x = 0
+while x < 5 do
+{
+    y = 0
+    while y < x do 
+        y = y + 1       <----- (1)
+    done 
+    x = x + 1
+}
+done
+}
+\end{verbatim}
+\noindent
+In the above example get fix-points at (1): $D_x = \{0,1,2,3,4\}, D_y = \{0,1,2,3\}$ with constraint variables $x, y$. We can solve the constraints as described in the previous section to get the precise solution. If that is infeasible, we may be conservative and simply multiply the sizes of the domains of the constraint variables instead. The conservative statement count at variable $v$ is thus:
+\begin{align*}
+\text{STMT\_COUNT}_{Cons}\;v = \prod_{ x \in E_{Var}\;} |D_{x,v}|
+\end{align*}
 
 %\paragraph{Nested loops with non-trivial branch condition}\NL
 %Consider the CFG in figure \ref{nestedwhile}. The domains at node $5$ will 
